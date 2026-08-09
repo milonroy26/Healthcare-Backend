@@ -1,10 +1,13 @@
 import bcrypt from 'bcryptjs'
+import { TokenPayload } from 'google-auth-library'
 import { JwtPayload, SignOptions } from 'jsonwebtoken'
 import { Role, UserStatus } from '../../../generated/prisma/enums'
 import config from '../../config'
+import { googleClient } from '../../lib/googleAuth'
 import { prisma } from '../../lib/prisma'
 import { jwtUtils } from '../../utils/jwt'
 import {
+    IGoogleLoginPayload,
     ILoginUserPayload,
     IRegisterPatientPayload,
     IRequestUser
@@ -182,11 +185,97 @@ const refreshToken = async (token: string) => {
     }
 }
 
+const googleLogin = async (payload: IGoogleLoginPayload) => {
+
+    let googleIdTokenPayload: TokenPayload | null | undefined = null;
+
+    try {
+        //* login ticket
+        const ticket = await googleClient.verifyIdToken({
+            idToken: payload.idToken,
+            audience: config.google_client_id
+        })
+
+        googleIdTokenPayload = ticket.getPayload()
+
+    } catch (error) {
+        console.log("Google Id Token Verification Error:", error)
+        throw new Error('Invalid Or Expired Google Id Token')
+    }
+
+    if (!googleIdTokenPayload) {
+        throw new Error('Invalid Or Expired Google Id Token')
+    }
+
+    if (!googleIdTokenPayload.email) {
+        throw new Error('Google Email Not Found')
+    }
+
+    if (!googleIdTokenPayload.name) {
+        throw new Error('User Name Not Found')
+    }
+
+    //* check if user exist
+    const ifPatientExistWithGoogleAuth = await prisma.user.findUnique({
+        where: {
+            email: googleIdTokenPayload.email,
+            role: Role.PATIENT,
+            googleId: googleIdTokenPayload.sub,
+        }
+    })
+
+    let user = ifPatientExistWithGoogleAuth
+
+    if (!user) {
+        user = await prisma.user.create({
+            data: {
+                name: googleIdTokenPayload.name,
+                email: googleIdTokenPayload.email,
+                role: Role.PATIENT,
+                googleId: googleIdTokenPayload.sub,
+                authProvider: 'GOOGLE',
+                patient: {
+                    create: {
+                        name: googleIdTokenPayload.name,
+                        email: googleIdTokenPayload.email
+                    }
+                }
+            }
+        })
+    }
+
+    const jwtPayload = {
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+    }
+
+    const accessToken = jwtUtils.createToken(
+        jwtPayload,
+        config.jwt_access_secret,
+        config.jwt_access_expires_in as SignOptions
+    );
+
+    const refreshToken = jwtUtils.createToken(
+        jwtPayload,
+        config.jwt_refresh_secret,
+        config.jwt_refresh_expires_in as SignOptions
+    );
+
+    return {
+        accessToken,
+        refreshToken
+    }
+
+}
+
 
 
 export const AuthService = {
     registerPatient,
     loginUser,
     getMe,
-    refreshToken
+    refreshToken,
+    googleLogin
 }

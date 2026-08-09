@@ -7,6 +7,9 @@ CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'BLOCKED', 'DELETED');
 -- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
+-- CreateEnum
+CREATE TYPE "AuthProvider" AS ENUM ('CREDENTIALS', 'GOOGLE');
+
 -- CreateTable
 CREATE TABLE "patients" (
     "id" TEXT NOT NULL,
@@ -28,7 +31,9 @@ CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
+    "googleId" TEXT,
+    "authProvider" "AuthProvider" NOT NULL DEFAULT 'CREDENTIALS',
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "role" "Role" NOT NULL DEFAULT 'PATIENT',
     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
@@ -52,6 +57,9 @@ CREATE INDEX "idx_patient_email" ON "patients"("email");
 
 -- CreateIndex
 CREATE INDEX "idx_patient_isDeleted" ON "patients"("isDeleted");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_googleId_key" ON "users"("googleId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
