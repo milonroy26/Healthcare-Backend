@@ -73,33 +73,43 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
 }
 
 const loginUser = async (payload: ILoginUserPayload) => {
-    const { password } = payload
-    const email = payload.email.trim().toLowerCase()
+    // 1. Payload & Email Validation Check
+    if (!payload?.email) {
+        throw new Error('Email is required');
+    }
+
+    if (!payload?.password) {
+        throw new Error('Password is required');
+    }
+
+    const { password } = payload;
+    // 2. Safe trim & toLowerCase with optional chaining
+    const email = payload.email.trim().toLowerCase();
 
     const user = await prisma.user.findUnique({
         where: { email },
-    })
+    });
 
     if (!user) {
-        throw new Error('User not found')
+        throw new Error('User not found');
     }
 
     if (user.status === UserStatus.BLOCKED) {
-        throw new Error('User is blocked')
+        throw new Error('User is blocked');
     }
 
     if (user.isDeleted || user.status === UserStatus.DELETED) {
-        throw new Error('User is deleted')
+        throw new Error('User is deleted');
     }
 
     if (!user.password) {
-        throw new Error('Invalid credentials')
+        throw new Error('Invalid credentials');
     }
 
-    const isPasswordMatched = await bcrypt.compare(password, user.password)
+    const isPasswordMatched = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatched) {
-        throw new Error('Invalid credentials')
+        throw new Error('Invalid credentials');
     }
 
     const jwtPayload = {
@@ -107,7 +117,7 @@ const loginUser = async (payload: ILoginUserPayload) => {
         name: user.name,
         email: user.email,
         role: user.role
-    }
+    };
 
     const accessToken = jwtUtils.createToken(
         jwtPayload,
@@ -124,8 +134,8 @@ const loginUser = async (payload: ILoginUserPayload) => {
     return {
         accessToken,
         refreshToken
-    }
-}
+    };
+};
 
 const getMe = async (user: IRequestUser) => {
     const isUserExists = await prisma.user.findUnique({
@@ -294,6 +304,10 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 
     if (user.isDeleted || user.status === UserStatus.DELETED) {
         throw new Error('User is deleted')
+    }
+
+    if (user.password === null && user.googleId !== null) {
+        throw new Error("User Allready Has Account Registered With Google. Try To Login with Google")
     }
 
     const jwtPayload = {
