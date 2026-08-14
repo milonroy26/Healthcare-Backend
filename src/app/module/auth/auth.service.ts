@@ -8,6 +8,9 @@ import { googleClient } from '../../lib/googleAuth'
 import { prisma } from '../../lib/prisma'
 import { jwtUtils } from '../../utils/jwt'
 
+import ejs from "ejs"
+import path from "path"
+import { transporter } from '../../lib/nodemailer'
 import { redisClient } from '../../lib/redis'
 import {
     IForgotPasswordPayload,
@@ -17,6 +20,7 @@ import {
     IRequestUser,
     IResetPasswordPayload
 } from './auth.interface'
+
 
 
 const registerPatient = async (payload: IRegisterPatientPayload) => {
@@ -377,6 +381,22 @@ const forgotPassword = async (payload: IForgotPasswordPayload) => {
             value: 5 * 60,
         }
     })
+
+    const expirationSeconds = 5 * 60
+    const tempatePath = path.join(process.cwd(), "src/app/templates/forgot-password.ejs")
+    const templateData = {
+        name: isUserExist.name,
+        otp,
+        expirationMinutes: expirationSeconds / 60
+    }
+    const html = await ejs.renderFile(tempatePath, templateData)
+
+    await transporter.sendMail({
+        from: config.email_sender,
+        to: isUserExist.email,
+        subject: "Forgot Password OTP",
+        html
+    })
 }
 
 const resetPassword = async (payload: IResetPasswordPayload) => {
@@ -433,6 +453,19 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
     });
 
     await redisClient.del([key]);
+
+    const tempatePath = path.join(process.cwd(), "src/app/templates/reset-password-success.ejs")
+    const templateData = {
+        name: isUserExist.name
+    }
+    const html = await ejs.renderFile(tempatePath, templateData)
+
+    await transporter.sendMail({
+        from: config.email_sender,
+        to: isUserExist.email,
+        subject: "Password Changed",
+        html
+    })
 }
 
 export const AuthService = {
