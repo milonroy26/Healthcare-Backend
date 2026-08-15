@@ -9,6 +9,8 @@ const router = Router()
 
 router.post('/register', validateRequest(UserValidation.PatientRegistrationZodSchema), AuthController.registerPatient)
 
+router.post('/verify-email', validateRequest(UserValidation.PatientEmailVerifyZodSchema), AuthController.verifyPatientEmail)
+
 router.post('/login', validateRequest(UserValidation.LoginZodSchema), AuthController.loginUser)
 
 router.get(
