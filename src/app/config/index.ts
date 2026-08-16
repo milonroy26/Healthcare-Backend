@@ -32,5 +32,8 @@ export default {
     redis_port: process.env.REDIS_PORT!,
     smtp_user: process.env.SMTP_USER!,
     email_sender: process.env.EMAIL_SENDER!,
-    smtp_password: process.env.SMTP_PASSWORD
+    smtp_password: process.env.SMTP_PASSWORD,
+    cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+    cloudinary_api_key: process.env.CLOUDINARY_API_KEY!,
+    cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET!
 }

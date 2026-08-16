@@ -424,6 +424,23 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
                     }
                 }
             })
+
+
+            //* Send Welcome Email
+            const tempatePath = path.join(process.cwd(), "src/app/templates/patient-welcome-email.ejs")
+
+            const templateData = {
+                name: user.name,
+            }
+
+            const html = await ejs.renderFile(tempatePath, templateData)
+
+            await transporter.sendMail({
+                from: config.email_sender,
+                to: user.email,
+                subject: "Welcome To PH Healthcare System",
+                html
+            })
         }
     }
 
