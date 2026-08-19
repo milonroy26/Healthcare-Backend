@@ -52,7 +52,7 @@ export const globalErrorHandler = async (
 
 
 
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+    res.status(statusCode).json({
         success: false,
         statusCode: statusCode || httpStatus.INTERNAL_SERVER_ERROR,
         name: config.node_env === 'development' ? errorName : "Internal Server Error",
