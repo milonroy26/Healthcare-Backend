@@ -6,6 +6,7 @@ import config from './app/config'
 import { getBkashIdToken } from './app/lib/bkash'
 import { globalErrorHandler } from './app/middleware/globalErrorHandler'
 import { notFound } from './app/middleware/notFound'
+import { AppointementRoutes } from './app/module/appointment/appointment.route'
 import { AuthRoutes } from './app/module/auth/auth.route'
 import { UserRoutes } from './app/module/user/user.route'
 
@@ -25,8 +26,9 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/api/v1/auth', AuthRoutes)
-app.use('/api/v1/user', UserRoutes)
+app.use('/api/v1/auth', AuthRoutes);
+app.use('/api/v1/user', UserRoutes);
+app.use('/api/vi/appointment', AppointementRoutes)
 
 app.get("/test", async (req: Request, res: Response, next: NextFunction) => {
 

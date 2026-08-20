@@ -4,13 +4,11 @@ import { getBkashIdToken } from "../../lib/bkash";
 const bookAppointment = async () => {
 
     // business logic
-
     const bkashIdToken = await getBkashIdToken()
 
     if (!bkashIdToken) {
         throw new Error("No Bkash Access Token Found!")
     }
-
     console.log({ bkashIdToken });
 
     const bkashCreatePaymentResponse = await fetch(`${config.bkash_base_url}/tokenized/checkout/create`, {
@@ -60,7 +58,6 @@ const bookAppointmentCallback = async (query: Record<string, any>) => {
         throw new Error("No Bkash Access Token Found!")
     }
 
-
     const executedPaymentResponse = await fetch(`${config.bkash_base_url}/tokenized/checkout/execute`, {
         method: "POST",
         headers: {
@@ -69,7 +66,6 @@ const bookAppointmentCallback = async (query: Record<string, any>) => {
             Authorization: bkashIdToken,
             "X-App-Key": config.bkash_app_key
         },
-
         body: JSON.stringify({
             paymentID: paymentId
         })
