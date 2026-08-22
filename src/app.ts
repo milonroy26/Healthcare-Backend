@@ -28,23 +28,11 @@ app.use(cookieParser())
 
 app.use('/api/v1/auth', AuthRoutes);
 app.use('/api/v1/user', UserRoutes);
-app.use('/api/vi/appointment', AppointementRoutes)
+app.use('/api/v1/appointment', AppointementRoutes)
 
 app.get("/test", async (req: Request, res: Response, next: NextFunction) => {
 
     try {
-
-        // 100000 > 999999 > 1000000
-        // const otp = crypto.randomInt(100000, 1000000) // 1, 2, 3, 4, 5, 6,7,8 ,9, 10 => X-11
-
-        // await redisClient.set("forgot-password-otp:patient1@gmail.com", otp.toString(), {
-        //     expiration: {
-        //         type: "EX",
-        //         fvalue: 60
-        //     }
-        // })
-
-
         const grantIdTokenResult = await getBkashIdToken();
 
         console.log(grantIdTokenResult);
