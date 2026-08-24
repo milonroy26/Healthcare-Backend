@@ -20,6 +20,22 @@ const bookAppointment = catchAsync(async (req: Request, res: Response) => {
 
 });
 
+const payAppointment = catchAsync(async (req: Request, res: Response) => {
+
+    const payload = req.body;
+
+    const user = req.user!;
+
+    const result = await AppointmentServices.payAppointment(payload, user);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Appointment Payment Initiated Successfully",
+        data: result,
+    });
+});
+
 const bookAppointmentCallback = catchAsync(async (req: Request, res: Response) => {
     console.log(req.query, "req.query");
     const { executedPaymentResult, redirectUrl } = await AppointmentServices.bookAppointmentCallback(req.query);
@@ -29,7 +45,22 @@ const bookAppointmentCallback = catchAsync(async (req: Request, res: Response) =
     res.redirect(redirectUrl);
 });
 
+const cancelAppointment = catchAsync(async (req: Request, res: Response) => {
+
+    const payload = req.body;
+
+    const result = await AppointmentServices.cancelAppointment(payload);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Appointment Cancelled And Refunded Successfully",
+        data: result,
+    });
+});
+
 export const AppointmentController = {
     bookAppointment,
-    bookAppointmentCallback
+    payAppointment,
+    bookAppointmentCallback,
+    cancelAppointment
 }
