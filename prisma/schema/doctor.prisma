@@ -7,7 +7,7 @@ model Doctor {
 
   specialization  String
   licenseNumber   String @unique
-  qualifications String
+  qualifications  String
   experienceYears Int
 
   bio             String?
@@ -21,9 +21,8 @@ model Doctor {
   reviewedAt         DateTime?
 
   resume          String?
-  resumePublicId   String?
+  resumePublicId  String?
   additionalFiles Json? // Array of file URLs or file metadata // Stores: [{ url: "...", publicId: "..." }]
-
 
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
