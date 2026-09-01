@@ -4,6 +4,5 @@ export interface IQuery {
     limit?: string
     sortOrder?: string
     sortBy?: string
-    //any other filter fields can be added here
     [key: string]: any
 }

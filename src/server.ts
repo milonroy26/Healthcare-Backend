@@ -22,7 +22,6 @@ const main = async () => {
         await seedSuperAdmin();
         await seedTesterAdmin();
         await seedTesterDoctor();
-
         // * Delete Unverified Doctors
         await deleteUnverifiedDoctors();
 
