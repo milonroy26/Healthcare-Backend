@@ -162,6 +162,7 @@ const getPatientAnalytics = async (user: RequestUser) => {
 
 }
 
+//* Doctor Analytics
 const getDoctorAnalytics = async (user: RequestUser) => {
 
     const doctor = await prisma.doctor.findUnique({
@@ -231,8 +232,6 @@ const getDoctorAnalytics = async (user: RequestUser) => {
     });
 
     const totalDoctorEarnings = (totalDoctorEarningsResult._sum.amount?.toNumber() || 0) - totalDoctorRefunded;
-
-
 
     return {
         totalSchedules,

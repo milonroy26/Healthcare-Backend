@@ -26,7 +26,6 @@ const createSchedule = async (payload: ICreateSchedulePayload, user: RequestUser
         throw new AppError(httpStatus.CONFLICT, "Start Date Time And End Date Time Must Be On The Same Day")
     }
     if (isAfter(payload.startDateTime, payload.endDateTime)) { // 25 August =>  3:00 PM - 9:00 PM
-
         throw new AppError(httpStatus.CONFLICT, "Start Date Time Cannot Be After End Date Time")
     }
 
@@ -275,6 +274,7 @@ const getScheduleById = async (scheduleId: string) => {
     return schedule
 }
 
+//* Update Schedule
 const updateSchedule = async (scheduleId: string, payload: IUpdateSchedulePayload, user: RequestUser) => {
 
     const doctor = await prisma.doctor.findUnique({
@@ -293,23 +293,11 @@ const updateSchedule = async (scheduleId: string, payload: IUpdateSchedulePayloa
         throw new AppError(httpStatus.NOT_FOUND, "Schedule Not Found");
     }
 
+    //* if schedule status published then cannot be updated and if total slots not equal to available slots then cannot be updated
     if (schedule.status === ScheduleStatus.PUBLISHED && schedule.totalSlots !== schedule.availableSlots) {
         throw new AppError(httpStatus.CONFLICT, "Schedule Once Published And Appoinemtn Booked Cannot Be Updated");
     }
 
-    // if (schedule.doctorId !== doctor.id) {
-    //     throw new AppError(
-    //         httpStatus.FORBIDDEN,
-    //         "You Are Not Allowed To Update This Schedule",
-    //     );
-    // }
-
-
-    // const updateData : IUpdateSchedulePayload = {};
-
-    // if(payload.meetingLink){
-    //     updateData.meetingLink = payload.meetingLink || schedule.meetingLink
-    // }
 
     payload.meetingLink = payload.meetingLink || schedule.meetingLink
     payload.startDateTime = payload.startDateTime || schedule.startDateTime
@@ -391,7 +379,9 @@ const updateSchedule = async (scheduleId: string, payload: IUpdateSchedulePayloa
     return updatedSchedule
 }
 
+// * Publish Schedule
 const publishSchedule = async (scheduleId: string, user: RequestUser) => {
+
     const doctor = await prisma.doctor.findUnique({
         where: { userId: user.userId },
     });
@@ -420,7 +410,9 @@ const publishSchedule = async (scheduleId: string, user: RequestUser) => {
     return publishedSchedule;
 }
 
+// * Delete Schedule
 const deleteSchedule = async (scheduleId: string, user: RequestUser) => {
+
     const doctor = await prisma.doctor.findUnique({
         where: { userId: user.userId },
     });
@@ -449,11 +441,15 @@ const deleteSchedule = async (scheduleId: string, user: RequestUser) => {
     return deletedSchedule;
 }
 
+//* Get Todays Schedules
 const getTodaysSchedules = async (query: IQuery) => {
+
+    //* IF DOCTOR ID IS NOT PROVIDED THROW AN ERROR IT MUST BE PROVIDED IN QUERY PARAM OF URL
     if (!query.doctorId) {
         throw new AppError(httpStatus.NOT_FOUND, "Doctor Id Must Be Provided In Query")
     }
 
+    //* CHECK IF DOCTOR EXISTS
     const doctor = await prisma.doctor.findUnique({
         where: { id: query.doctorId },
     });
@@ -469,9 +465,10 @@ const getTodaysSchedules = async (query: IQuery) => {
     const sortOrder = query.sortOrder ? query.sortOrder : "desc"
 
     const now = new Date();
-    const startOfToday = startOfDay(now);
-    const startOfTomorrow = addDays(startOfToday, 1)
+    const startOfToday = startOfDay(now); // to day start time = 12:00 AM
+    const startOfTomorrow = addDays(startOfToday, 1) // tommorow start time = 12:00 AM
 
+    //* Define Conditions For Schedules To Be Fetched Based On Query Params
     const andConditions: ScheduleWhereInput[] = [
         {
             doctorId: query.doctorId
@@ -482,6 +479,7 @@ const getTodaysSchedules = async (query: IQuery) => {
         {
             status: ScheduleStatus.PUBLISHED
         },
+        //* Filter Schedules Based On Start Time
         {
             startDateTime: {
                 gte: startOfToday,
@@ -493,7 +491,6 @@ const getTodaysSchedules = async (query: IQuery) => {
             availableSlots: { gt: 0 }
         }
     ];
-
     const schedules = await prisma.schedule.findMany({
         where: {
             AND: andConditions
@@ -502,7 +499,6 @@ const getTodaysSchedules = async (query: IQuery) => {
         take: limit,
         skip,
         orderBy: {
-            // sortBy : sortOrder
             [sortBy]: sortOrder
         }
     })
