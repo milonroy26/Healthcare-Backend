@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Role } from "../../generated/prisma/enums";
+import { DoctorVerificationStatus, Role } from "../../generated/prisma/enums";
 import config from "../config";
 import { prisma } from "../lib/prisma";
 
@@ -110,17 +110,38 @@ export const seedTesterDoctor = async () => {
         const isTesterDoctorExist = await prisma.user.findUnique({
             where: {
                 email: config.tester_doctor_email
+            },
+            include: {
+                doctor: true
             }
         });
 
         if (isTesterDoctorExist) {
+            if (!isTesterDoctorExist.doctor) {
+                await prisma.doctor.create({
+                    data: {
+                        userId: isTesterDoctorExist.id,
+                        email: isTesterDoctorExist.email,
+                        name: isTesterDoctorExist.name,
+                        experienceYears: 5,
+                        licenseNumber: "BMDC0000",
+                        qualifications: "MBBS",
+                        specialization: "Neurology",
+                        verificationStatus: DoctorVerificationStatus.APPROVED,
+                    },
+                });
+
+                console.log("Tester Doctor Profile Created!");
+                return;
+            }
+
             console.log("Tester Doctor Already Exists!");
             return;
         }
 
         const name = config.tester_doctor_name
         const email = config.tester_doctor_email
-        const password = config.tester_admin_password
+        const password = config.tester_doctor_password
 
         if (!name || !email || !password) {
             throw new Error("Tester Doctor Name , Email, Password Missing In Env File!!!")
@@ -135,7 +156,18 @@ export const seedTesterDoctor = async () => {
                 password: hashedPassword,
                 role: Role.DOCTOR,
                 needPasswordChange: false,
-                emailVerified: true
+                emailVerified: true,
+                doctor: {
+                    create: {
+                        email,
+                        name,
+                        experienceYears: 5,
+                        licenseNumber: "BMDC0000",
+                        qualifications: "MBBS",
+                        specialization: "Neurology",
+                        verificationStatus: DoctorVerificationStatus.APPROVED,
+                    },
+                },
             }
         })
 
