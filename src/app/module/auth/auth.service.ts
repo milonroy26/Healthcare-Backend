@@ -43,6 +43,11 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
     //* generate otp and store in redis for 5 minutes 
     const otpKey = `patient-registration-otp:${email}`
     const otpValue = crypto.randomInt(100000, 1000000).toString();
+
+    if (config.node_env === "development") {
+        console.log(`OTP: ${otpValue}, email: ${email}`)
+    }
+
     await redisClient.set(otpKey, otpValue, {
         expiration: {
             type: "EX",
